@@ -6,6 +6,10 @@ import { defineConfig } from 'vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  build: {
+    // Avoid gzip pass on every output file (can look "stuck" on small VPS / low RAM).
+    reportCompressedSize: false,
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

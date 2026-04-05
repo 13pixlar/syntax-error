@@ -44,6 +44,8 @@ Build static assets with `npm run build`, then host the `dist/` folder on any st
 
 Ensure production env vars are set when building if you inject `VITE_*` at CI time.
 
+Production builds set `build.reportCompressedSize: false` in `vite.config.ts` so `npm run build` does not spend a long time (or appear stuck) gzip-sizing every asset on small VPS hosts.
+
 ## Stack
 
 - Vite 6, React 19, TypeScript, Tailwind CSS v4, shadcn/ui, Supabase JS client, howler.js (npm package) for audio.
