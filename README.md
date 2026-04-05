@@ -1,73 +1,55 @@
-# React + TypeScript + Vite
+# Syntax Error — web app
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Retro-styled SPA for browsing and streaming episodes of the [Syntax Error](https://www.syntaxerror.nu/) radio show. Data comes from **Supabase** (Postgres over PostgREST).
 
-Currently, two official plugins are available:
+## Requirements
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Node.js 18+** (see `engines` in `package.json`)
 
-## React Compiler
+## Setup
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+git clone <your-repo-url> syntax-error-web
+cd syntax-error-web
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Environment
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Copy the example env file and set your Supabase values:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+cp .env.example .env.local
 ```
+
+| Variable | Description |
+|----------|-------------|
+| `VITE_SUPABASE_URL` | Project API URL (e.g. `https://<project-ref>.supabase.co`) |
+| `VITE_SUPABASE_ANON_KEY` | Publishable (anon) key from the Supabase dashboard |
+
+The app reads these at build/dev time via Vite. Without them, the client throws on startup so misconfiguration fails fast.
+
+## Scripts
+
+| Command | Purpose |
+|---------|---------|
+| `npm run dev` | Dev server (default [http://localhost:5173](http://localhost:5173)) |
+| `npm run build` | Typecheck + production build → `dist/` |
+| `npm run preview` | Serve the production build locally |
+| `npm run lint` | ESLint |
+
+## Deploying
+
+Build static assets with `npm run build`, then host the `dist/` folder on any static host (CDN, Nginx, S3, etc.). Configure the host for **SPA routing** (fallback to `index.html` for client-side routes).
+
+Ensure production env vars are set when building if you inject `VITE_*` at CI time.
+
+## Stack
+
+- Vite 6, React 19, TypeScript, Tailwind CSS v4, shadcn/ui, Supabase JS client, howler.js (npm package) for audio.
+
+## Repository layout
+
+This directory is intended to be the **root of its own Git repository** (no `../` path dependencies). Clone it, install, add env, and run.
+
+`.env.local` is for secrets and is ignored by git (see `.gitignore`); only `.env.example` is tracked as a template.
