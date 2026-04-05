@@ -26,8 +26,9 @@ cp .env.example .env.local
 |----------|-------------|
 | `VITE_SUPABASE_URL` | Project API URL (e.g. `https://<project-ref>.supabase.co`) |
 | `VITE_SUPABASE_ANON_KEY` | Publishable (anon) key from the Supabase dashboard |
+| `VITE_BASE` | Optional. Public path where the app is served, e.g. `/syntaxerror/` or `/` (default). Must match your deploy URL; used for asset URLs and the router `basename`. |
 
-The app reads these at build/dev time via Vite. Without them, the client throws on startup so misconfiguration fails fast.
+The app reads these at build/dev time via Vite. Without Supabase vars, the client throws on startup so misconfiguration fails fast.
 
 ## Scripts
 
@@ -40,7 +41,13 @@ The app reads these at build/dev time via Vite. Without them, the client throws 
 
 ## Deploying
 
-Build static assets with `npm run build`, then host the `dist/` folder on any static host (CDN, Nginx, S3, etc.). Configure the host for **SPA routing** (fallback to `index.html` for client-side routes).
+Build static assets with `npm run build`, then host the **`dist/`** folder — not the repo root. If the server serves the wrong `index.html` (the one with `/src/main.tsx`), the browser will request TS sources from the site root and you will see MIME / blank page errors.
+
+Set `VITE_BASE` in `.env.local` (or `.env.production` on the build host) to match your public URL path, e.g. `VITE_BASE=/syntaxerror/`. Omit it for a root deploy (`/`). `import.meta.env.BASE_URL` and React Router follow this automatically.
+
+Configure the web server so the **built** `dist/` tree is what gets served at that path (not the repository root), and add an SPA fallback so unknown paths return `index.html`. See [Vite’s static deploy guide](https://vite.dev/guide/static-deploy.html).
+
+For local dev with a non-root `VITE_BASE`, open e.g. `http://localhost:5173/syntaxerror/` (path must match `VITE_BASE`).
 
 Ensure production env vars are set when building if you inject `VITE_*` at CI time.
 
