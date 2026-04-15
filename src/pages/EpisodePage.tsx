@@ -41,8 +41,11 @@ import {
   normalizeTranscriptLines,
   parseTimeLabelToSeconds,
 } from '@/lib/transcriptTime'
+import { Seo } from '@/components/Seo'
 import { useFavoriteRefs } from '@/lib/hooks/useFavoriteRefs'
 import { EpisodeComments } from '@/components/EpisodeComments'
+import { episodeSeoDescription, episodeSeoTitle } from '@/lib/seo/episodeMeta'
+import { breadcrumbJsonLd, podcastEpisodeJsonLd } from '@/lib/seo/jsonLd'
 
 export function EpisodePage() {
   const { ref: refParam } = useParams<{ ref: string }>()
@@ -117,42 +120,80 @@ export function EpisodePage() {
     [ref, isInvalidRef],
   )
 
+  const canonicalPath =
+    !isInvalidRef && refParam ? `/episode/${refParam}` : '/'
+
+  const fallbackTitle = !isInvalidRef
+    ? `Episode ${ref} — Syntax Error`
+    : 'Syntax Error — episode archive'
+  const fallbackDesc =
+    'Syntax Error radio episode — 8-bit and 16-bit SID, chiptune, and game music archive.'
+
   if (isInvalidRef) {
     return (
-      <p className="text-destructive">
-        Invalid episode id.{' '}
-        <Link to="/" className="text-primary underline">
-          Back to catalog
-        </Link>
-      </p>
+      <>
+        <Seo
+          title="Invalid episode — Syntax Error"
+          description={fallbackDesc}
+          canonicalPath="/"
+        />
+        <p className="text-destructive">
+          Invalid episode id.{' '}
+          <Link to="/" className="text-primary underline">
+            Back to catalog
+          </Link>
+        </p>
+      </>
     )
   }
 
   if (err) {
     return (
-      <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-6 text-destructive">
-        {err}
-      </div>
+      <>
+        <Seo
+          title={fallbackTitle}
+          description={fallbackDesc}
+          canonicalPath={canonicalPath}
+        />
+        <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-6 text-destructive">
+          {err}
+        </div>
+      </>
     )
   }
 
   if (episode === undefined || tracks === null) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-48 rounded-xl" />
-        <Skeleton className="h-64 rounded-xl" />
-      </div>
+      <>
+        <Seo
+          title={fallbackTitle}
+          description={fallbackDesc}
+          canonicalPath={canonicalPath}
+        />
+        <div className="space-y-6">
+          <Skeleton className="h-48 rounded-xl" />
+          <Skeleton className="h-64 rounded-xl" />
+        </div>
+      </>
     )
   }
 
   if (!episode) {
     return (
-      <p className="text-muted-foreground">
-        Episode not found.{' '}
-        <Link to="/" className="text-primary underline">
-          Back to catalog
-        </Link>
-      </p>
+      <>
+        <Seo
+          title="Episode not found — Syntax Error"
+          description="This episode is not in the archive."
+          canonicalPath={canonicalPath}
+          noIndex
+        />
+        <p className="text-muted-foreground">
+          Episode not found.{' '}
+          <Link to="/" className="text-primary underline">
+            Back to catalog
+          </Link>
+        </p>
+      </>
     )
   }
 
@@ -216,8 +257,24 @@ export function EpisodePage() {
     })
   }
 
+  const epTitle = episodeSeoTitle(episode)
+  const epDesc = episodeSeoDescription(episode)
+  const epJsonLd = [
+    breadcrumbJsonLd([
+      { name: 'Catalog', path: '/' },
+      { name: displayTitle, path: `/episode/${episode.ref}` },
+    ]),
+    podcastEpisodeJsonLd(episode),
+  ]
+
   return (
     <div className="flex flex-col gap-8">
+      <Seo
+        title={epTitle}
+        description={epDesc}
+        canonicalPath={`/episode/${episode.ref}`}
+        jsonLd={epJsonLd}
+      />
       <nav className="font-body text-muted-foreground text-sm">
         <Link to="/" className="hover:text-primary hover:underline">
           Catalog
@@ -230,9 +287,9 @@ export function EpisodePage() {
         <CardHeader>
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <CardTitle className="font-display text-xl text-primary md:text-2xl">
+              <h1 className="font-display text-xl text-primary md:text-2xl">
                 {displayTitle}
-              </CardTitle>
+              </h1>
               {episode.subtitle ? (
                 <CardDescription className="mt-1 font-body text-base text-muted-foreground">
                   {label}

@@ -26,9 +26,20 @@ cp .env.example .env.local
 |----------|-------------|
 | `VITE_SUPABASE_URL` | Project API URL (e.g. `https://<project-ref>.supabase.co`) |
 | `VITE_SUPABASE_ANON_KEY` | Publishable (anon) key from the Supabase dashboard |
-| `VITE_BASE` | Optional. Public path where the app is served, e.g. `/syntaxerror/` or `/` (default). Must match your deploy URL; used for asset URLs and the router `basename`. |
+| `VITE_PUBLIC_SITE_URL` | Public origin of this deployment, **no trailing slash** (e.g. `https://your-domain.com`). Required for production builds: canonical URLs, Open Graph, `sitemap.xml`, `robots.txt`, and prerendered HTML shells. |
 
-The app reads these at build/dev time via Vite. Without Supabase vars, the client throws on startup so misconfiguration fails fast.
+The app reads these at build/dev time via Vite. Without them, the client throws on startup so misconfiguration fails fast.
+
+#### Which `.env` file is used?
+
+Vite loads several files; **later ones override earlier ones**:
+
+| Command | Typical files (in order) |
+|---------|---------------------------|
+| `npm run dev` | `.env`, `.env.local`, `.env.development`, `.env.development.local` |
+| `npm run build` | `.env`, `.env.local`, `.env.production`, `.env.production.local` |
+
+So **yes** — for production builds, variables in **`.env.production`** (and `.env.production.local`) are picked up automatically. Use **`.env.local`** for secrets you never commit (gitignored). You can put production values in `.env.production` on the server, or export vars in the shell / CI before `npm run build`.
 
 ## Scripts
 
@@ -41,17 +52,31 @@ The app reads these at build/dev time via Vite. Without Supabase vars, the clien
 
 ## Deploying
 
-Build static assets with `npm run build`, then host the **`dist/`** folder — not the repo root. If the server serves the wrong `index.html` (the one with `/src/main.tsx`), the browser will request TS sources from the site root and you will see MIME / blank page errors.
+**Serve the `dist/` folder**, not the repository root.
 
-Set `VITE_BASE` in `.env.local` (or `.env.production` on the build host) to match your public URL path, e.g. `VITE_BASE=/syntaxerror/`. Omit it for a root deploy (`/`). `import.meta.env.BASE_URL` and React Router follow this automatically.
+The source [`index.html`](index.html) contains `<script src="/src/main.tsx">` for **development only**. After `npm run build`, the output in **`dist/index.html`** references hashed JS under **`/assets/`**. If your web server’s document root is the **repo** (or anything that serves the wrong `index.html`), the browser will try to load **`/src/main.tsx`**, which fails (wrong MIME, corrupted content, blank page).
 
-Configure the web server so the **built** `dist/` tree is what gets served at that path (not the repository root), and add an SPA fallback so unknown paths return `index.html`. See [Vite’s static deploy guide](https://vite.dev/guide/static-deploy.html).
+Point the site’s document root (or `alias`) at **`dist/`**, or copy **`dist/*`** to the host path. Configure the server so that:
 
-For local dev with a non-root `VITE_BASE`, open e.g. `http://localhost:5173/syntaxerror/` (path must match `VITE_BASE`).
+- **Prerendered routes** resolve to real files (e.g. `/episode/42` → `dist/episode/42/index.html` when using `try_files $uri $uri/ …` or your host’s equivalent).
+- **Other client routes** still fall back to a SPA shell (`index.html`) where no prerender file exists.
 
-Ensure production env vars are set when building if you inject `VITE_*` at CI time.
+See [Vite static deploy](https://vite.dev/guide/static-deploy.html).
 
-Production builds set `build.reportCompressedSize: false` in `vite.config.ts` so `npm run build` does not spend a long time (or appear stuck) gzip-sizing every asset on small VPS hosts.
+Production builds set `build.reportCompressedSize: false` in `vite.config.ts` so `npm run build` does not spend a long time gzip-sizing every asset on small hosts.
+
+### SEO (search and link previews)
+
+After `npm run build`, **`dist/`** includes:
+
+- **`sitemap.xml`** — URLs for `/`, `/about`, `/favorites`, `/games`, every `/episode/:ref`, and every `/games/:encodedName` (from `../data/episodes.json`).
+- **`robots.txt`** — allows crawling and references the sitemap.
+- **`og-default.png`** — default Open Graph / Twitter image.
+- **Prerendered `index.html` files** under `about/`, `favorites/`, `games/`, `episode/<ref>/`, and `games/<encodedName>/` with `<title>`, meta description, canonical, Open Graph, Twitter Card, and JSON-LD in the first response (in addition to **`react-helmet-async`** updating tags at runtime).
+
+Set **`VITE_PUBLIC_SITE_URL`** for production builds (see `.env.example`). The post-build step fails if it is missing.
+
+**Search Console and Bing (manual):** verify site ownership, then submit `https://<your-domain>/sitemap.xml`. Use [Rich Results Test](https://search.google.com/test/rich-results) on a few episode URLs after deploy.
 
 ## Stack
 

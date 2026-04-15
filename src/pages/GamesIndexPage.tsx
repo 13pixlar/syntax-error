@@ -2,8 +2,11 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Gamepad2 } from 'lucide-react'
 
+import { Seo } from '@/components/Seo'
 import { Skeleton } from '@/components/ui/skeleton'
 import { fetchEpisodes, type Episode } from '@/lib/api/episodes'
+import { uniqueFeaturedGameNamesSorted } from '@/lib/seo/gamesFromEpisodes'
+import { SEO } from '@/lib/seo/staticCopy'
 
 type GameRow = { name: string; count: number }
 
@@ -18,20 +21,11 @@ function buildGameRows(episodes: Episode[]): GameRow[] {
       else counts.set(key, prev + 1)
     }
   }
-  const canonical = new Map<string, string>()
-  for (const ep of episodes) {
-    for (const g of ep.featured_games ?? []) {
-      const k = g.toLowerCase()
-      if (!canonical.has(k)) canonical.set(k, g)
-    }
-  }
-  const rows: GameRow[] = []
-  for (const [k, count] of counts) {
-    const name = canonical.get(k)
-    if (name) rows.push({ name, count })
-  }
-  rows.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
-  return rows
+  const names = uniqueFeaturedGameNamesSorted(episodes)
+  return names.map((name) => ({
+    name,
+    count: counts.get(name.toLowerCase()) ?? 0,
+  }))
 }
 
 export function GamesIndexPage() {
@@ -60,27 +54,46 @@ export function GamesIndexPage() {
 
   if (err) {
     return (
-      <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-6 text-destructive">
-        {err}
-      </div>
+      <>
+        <Seo
+          title={SEO.gamesIndex.title}
+          description={SEO.gamesIndex.description}
+          canonicalPath="/games"
+        />
+        <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-6 text-destructive">
+          {err}
+        </div>
+      </>
     )
   }
 
   if (!episodes) {
     return (
-      <div className="space-y-4">
-        <Skeleton className="h-10 w-64 rounded-lg" />
-        <div className="grid gap-2 sm:grid-cols-2">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <Skeleton key={i} className="h-14 rounded-lg" />
-          ))}
+      <>
+        <Seo
+          title={SEO.gamesIndex.title}
+          description={SEO.gamesIndex.description}
+          canonicalPath="/games"
+        />
+        <div className="space-y-4">
+          <Skeleton className="h-10 w-64 rounded-lg" />
+          <div className="grid gap-2 sm:grid-cols-2">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <Skeleton key={i} className="h-14 rounded-lg" />
+            ))}
+          </div>
         </div>
-      </div>
+      </>
     )
   }
 
   return (
     <div className="flex flex-col gap-8">
+      <Seo
+        title={SEO.gamesIndex.title}
+        description={SEO.gamesIndex.description}
+        canonicalPath="/games"
+      />
       <nav className="font-body text-muted-foreground text-sm">
         <Link to="/" className="hover:text-primary hover:underline">
           Catalog

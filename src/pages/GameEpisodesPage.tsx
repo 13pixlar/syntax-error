@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 
 import { EpisodeCatalogCard } from '@/components/EpisodeCatalogCard'
 import { EpisodeSortSelect } from '@/components/EpisodeSortSelect'
+import { Seo } from '@/components/Seo'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   fetchEpisodesByFeaturedGame,
@@ -12,6 +13,8 @@ import {
   fetchEpisodeRatingStats,
   type EpisodeRatingStat,
 } from '@/lib/api/ratings'
+import { breadcrumbJsonLd } from '@/lib/seo/jsonLd'
+import { gamePageCopy, gamePageLoadingCopy } from '@/lib/seo/staticCopy'
 import { sortEpisodes, type EpisodeSortMode } from '@/lib/episodeSort'
 
 export function GameEpisodesPage() {
@@ -54,37 +57,80 @@ export function GameEpisodesPage() {
     return sortEpisodes(episodes, ratingStats, sortMode)
   }, [episodes, ratingStats, sortMode])
 
+  const canonicalPath = gameNameParam ? `/games/${gameNameParam}` : '/games'
+
   if (!gameNameParam) {
     return (
-      <p className="text-destructive">
-        Missing game.{' '}
-        <Link to="/games" className="text-primary underline">
-          Browse games
-        </Link>
-      </p>
+      <>
+        <Seo
+          title="Games — Syntax Error"
+          description="Browse Syntax Error episodes by featured game title."
+          canonicalPath="/games"
+        />
+        <p className="text-destructive">
+          Missing game.{' '}
+          <Link to="/games" className="text-primary underline">
+            Browse games
+          </Link>
+        </p>
+      </>
     )
   }
 
+  const loadingCopy = gamePageLoadingCopy(gameName)
+  const crumbs = breadcrumbJsonLd([
+    { name: 'Catalog', path: '/' },
+    { name: 'Games', path: '/games' },
+    { name: gameName, path: canonicalPath },
+  ])
+
   if (err) {
     return (
-      <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-6 text-destructive">
-        {err}
-      </div>
+      <>
+        <Seo
+          title={loadingCopy.title}
+          description={loadingCopy.description}
+          canonicalPath={canonicalPath}
+          jsonLd={crumbs}
+        />
+        <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-6 text-destructive">
+          {err}
+        </div>
+      </>
     )
   }
 
   if (episodes === null || ratingStats === null || sortedEpisodes === null) {
     return (
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="h-36 rounded-xl" />
-        ))}
-      </div>
+      <>
+        <Seo
+          title={loadingCopy.title}
+          description={loadingCopy.description}
+          canonicalPath={canonicalPath}
+          jsonLd={crumbs}
+        />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-36 rounded-xl" />
+          ))}
+        </div>
+      </>
     )
   }
 
+  const { title: gameTitle, description: gameDesc } = gamePageCopy(
+    gameName,
+    episodes.length,
+  )
+
   return (
     <div className="flex flex-col gap-8">
+      <Seo
+        title={gameTitle}
+        description={gameDesc}
+        canonicalPath={canonicalPath}
+        jsonLd={crumbs}
+      />
       <nav className="font-body text-muted-foreground text-sm">
         <Link to="/" className="hover:text-primary hover:underline">
           Catalog

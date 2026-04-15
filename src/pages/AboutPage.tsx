@@ -1,11 +1,18 @@
 import { Link } from 'react-router-dom'
 import { ExternalLink } from 'lucide-react'
 
+import { Seo } from '@/components/Seo'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { SEO } from '@/lib/seo/staticCopy'
 
 export function AboutPage() {
   return (
     <div className="space-y-8">
+      <Seo
+        title={SEO.about.title}
+        description={SEO.about.description}
+        canonicalPath="/about"
+      />
       <div>
         <h1 className="font-display text-2xl text-primary md:text-3xl">About this site</h1>
         <p className="mt-2 font-body text-muted-foreground text-lg">

@@ -2,12 +2,14 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowDown, ArrowUp, Headphones, ListMusic, Play, Star } from 'lucide-react'
 
+import { Seo } from '@/components/Seo'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { fetchEpisodesByRefs, type Episode } from '@/lib/api/episodes'
 import { useAudioPlayer, type NowPlaying } from '@/lib/audio/AudioPlayerContext'
 import { useFavoriteRefs } from '@/lib/hooks/useFavoriteRefs'
+import { SEO } from '@/lib/seo/staticCopy'
 import { cn } from '@/lib/utils'
 
 function episodeToMainNowPlaying(ep: Episode): NowPlaying | null {
@@ -68,9 +70,16 @@ export function FavoritesPage() {
 
   if (err) {
     return (
-      <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-6 text-destructive">
-        {err}
-      </div>
+      <>
+        <Seo
+          title={SEO.favorites.title}
+          description={SEO.favorites.description}
+          canonicalPath="/favorites"
+        />
+        <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-6 text-destructive">
+          {err}
+        </div>
+      </>
     )
   }
 
@@ -78,15 +87,27 @@ export function FavoritesPage() {
 
   if (refs.length > 0 && episodes === null) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-12 rounded-xl" />
-        <Skeleton className="h-64 rounded-xl" />
-      </div>
+      <>
+        <Seo
+          title={SEO.favorites.title}
+          description={SEO.favorites.description}
+          canonicalPath="/favorites"
+        />
+        <div className="space-y-6">
+          <Skeleton className="h-12 rounded-xl" />
+          <Skeleton className="h-64 rounded-xl" />
+        </div>
+      </>
     )
   }
 
   return (
     <div className="flex flex-col gap-8">
+      <Seo
+        title={SEO.favorites.title}
+        description={SEO.favorites.description}
+        canonicalPath="/favorites"
+      />
       <section className="rounded-xl border border-border/80 bg-card/50 p-6 shadow-[inset_0_0_40px_rgba(255,255,0,0.04)]">
         <div className="flex flex-wrap items-start gap-4">
             <div className="flex size-14 items-center justify-center rounded-lg border border-border/80 bg-primary/10 text-primary">
