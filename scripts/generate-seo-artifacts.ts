@@ -121,9 +121,22 @@ function episodeFromJson(row: unknown): Episode {
 }
 
 function loadEpisodesJson(): Episode[] {
-  const raw = readFileSync(join(repoRoot, 'data', 'episodes.json'), 'utf8')
-  const data = JSON.parse(raw) as unknown[]
-  return data.map(episodeFromJson)
+  // Support two layouts:
+  //   monorepo dev:  web/scripts/ → ../../data/episodes.json  (repoRoot/data)
+  //   flat deploy:   scripts/     → ../data/episodes.json     (webRoot/data)
+  const candidates = [
+    join(repoRoot, 'data', 'episodes.json'),
+    join(webRoot, 'data', 'episodes.json'),
+  ]
+  for (const p of candidates) {
+    try {
+      const raw = readFileSync(p, 'utf8')
+      return (JSON.parse(raw) as unknown[]).map(episodeFromJson)
+    } catch {
+      // try next candidate
+    }
+  }
+  throw new Error(`episodes.json not found; tried: ${candidates.join(', ')}`)
 }
 
 function sitemapUrl(loc: string, base: string): string {

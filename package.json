@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build && tsx scripts/run-seo.mjs",
+    "build": "tsc -b && vite build && tsx scripts/run-seo.mjs && node scripts/sync-manifest.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },
