@@ -60,6 +60,10 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
   const howlRef = useRef<Howl | null>(null)
   const queueRef = useRef<QueueRef>({ tracks: null, index: 0 })
   const volumeRef = useRef(0.9)
+  /** Map of external URL → local /audio/... fallback path from manifest.json */
+  const manifestRef = useRef<Record<string, string>>({})
+  /** Tracks which external URLs have already had a local fallback attempted */
+  const fallbackTriedRef = useRef<Set<string>>(new Set())
 
   const [nowPlaying, setNowPlaying] = useState<NowPlaying | null>(null)
   const [queue, setQueue] = useState<QueueState | null>(null)
@@ -72,6 +76,15 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     volumeRef.current = volume
   }, [volume])
+
+  useEffect(() => {
+    fetch('/audio/manifest.json')
+      .then(r => (r.ok ? r.json() : {}))
+      .then((data: Record<string, string>) => {
+        manifestRef.current = data
+      })
+      .catch(() => {})
+  }, [])
 
   const disposeHowl = useCallback(() => {
     const h = howlRef.current
@@ -114,6 +127,12 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
           }
         },
         onloaderror: (_id, err) => {
+          const fallback = manifestRef.current[track.url]
+          if (fallback && !fallbackTriedRef.current.has(track.url)) {
+            fallbackTriedRef.current.add(track.url)
+            loadTrackRef.current({ ...track, url: fallback })
+            return
+          }
           console.error(err)
           setError('Could not load audio (check URL or CORS).')
           setPlaying(false)

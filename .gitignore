@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local audio backup (gitignored — upload manually; manifest.json is committed)
+public/audio/
+!public/audio/manifest.json
