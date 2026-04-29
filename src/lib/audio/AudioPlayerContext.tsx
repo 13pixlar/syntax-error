@@ -226,8 +226,20 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
   const seek = useCallback((seconds: number) => {
     const h = howlRef.current
     if (!h) return
+    // Capture playing state before the seek. On iOS/Android, setting
+    // currentTime on an HTML5 <audio> element can silently pause it for
+    // buffering without Howler noticing, leaving the UI in a "playing" state
+    // with no audio output.
+    const wasPlaying = h.playing()
     h.seek(seconds)
     setCurrentTime(seconds)
+    if (wasPlaying) {
+      setTimeout(() => {
+        if (howlRef.current && !howlRef.current.playing()) {
+          howlRef.current.play()
+        }
+      }, 200)
+    }
   }, [])
 
   const setVolume = useCallback((v: number) => {

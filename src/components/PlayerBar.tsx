@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Pause, Play, SkipForward, Volume2 } from 'lucide-react'
 
@@ -36,8 +37,14 @@ export function PlayerBar() {
     queue.length > 1 &&
     queue.index < queue.length - 1
 
+  // Local drag state: set while the user is scrubbing so the thumb moves
+  // smoothly without triggering seek() on every pointer-move event.
+  const [dragValue, setDragValue] = useState<number | null>(null)
+
   const max = duration > 0 ? duration : 1
   const progress = Math.min(currentTime, max)
+  // During a drag show the speculative position; otherwise show real playback time.
+  const displayTime = dragValue ?? progress
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/80 bg-card/95 shadow-[0_-4px_24px_rgba(0,0,0,0.45)] backdrop-blur-md">
@@ -97,16 +104,25 @@ export function PlayerBar() {
 
         <div className="flex flex-1 flex-col gap-1 md:max-w-xl">
           <div className="flex items-center gap-2 text-muted-foreground text-xs tabular-nums">
-            <span>{formatTime(progress)}</span>
+            <span>{formatTime(displayTime)}</span>
             <Slider
               className="flex-1"
               min={0}
               max={max}
-              value={[progress]}
+              value={[displayTime]}
               disabled={!nowPlaying || duration <= 0}
               onValueChange={(v) => {
+                // Update the visual thumb position only — no seek() here.
+                // Calling howl.seek() on every pointer-move causes repeated
+                // buffering stalls on mobile (iOS/Android).
+                const next = Array.isArray(v) ? v[0] : v
+                if (typeof next === 'number') setDragValue(next)
+              }}
+              onValueCommitted={(v) => {
+                // Fires once on pointerup / drag-end: safe to seek now.
                 const next = Array.isArray(v) ? v[0] : v
                 if (typeof next === 'number') seek(next)
+                setDragValue(null)
               }}
             />
             <span>{formatTime(duration)}</span>
