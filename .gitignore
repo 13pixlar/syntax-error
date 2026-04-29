@@ -24,5 +24,5 @@ dist-ssr
 *.sw?
 
 # Local audio backup (gitignored — upload manually; manifest.json is committed)
-public/audio/
+public/audio/*
 !public/audio/manifest.json
