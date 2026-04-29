@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url'
 
 const projectRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
 const src = join(projectRoot, 'dist', 'audio', 'manifest.json')
-const destDir = join(projectRoot, '..', 'audio')
+const destDir = join(projectRoot, 'audio')
 const dest = join(destDir, 'manifest.json')
 
 if (!existsSync(src)) {
