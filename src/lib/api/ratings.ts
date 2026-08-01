@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabaseClient'
+import { TABLES } from '@/lib/supabaseTables'
 
 export type EpisodeRatingStat = {
   ref: number
@@ -11,7 +12,7 @@ export async function fetchEpisodeRatingStats(): Promise<
   Map<number, EpisodeRatingStat>
 > {
   const { data, error } = await supabase
-    .from('episode_rating_stats')
+    .from(TABLES.episodeRatingStats)
     .select('ref, avg_rating, rating_count')
 
   if (error) throw error
@@ -45,7 +46,7 @@ export async function upsertEpisodeRating(
   if (rating < 1 || rating > 5 || !Number.isInteger(rating)) {
     throw new Error('Rating must be an integer from 1 to 5')
   }
-  const { error } = await supabase.from('episode_ratings').upsert(
+  const { error } = await supabase.from(TABLES.episodeRatings).upsert(
     {
       ref,
       client_id: clientId,
@@ -62,7 +63,7 @@ export async function fetchMyRatingForRef(
   clientId: string,
 ): Promise<number | null> {
   const { data, error } = await supabase
-    .from('episode_ratings')
+    .from(TABLES.episodeRatings)
     .select('rating')
     .eq('ref', ref)
     .eq('client_id', clientId)
@@ -79,7 +80,7 @@ export async function fetchRatingStatForRef(
   ref: number,
 ): Promise<EpisodeRatingStat | null> {
   const { data, error } = await supabase
-    .from('episode_rating_stats')
+    .from(TABLES.episodeRatingStats)
     .select('ref, avg_rating, rating_count')
     .eq('ref', ref)
     .maybeSingle()

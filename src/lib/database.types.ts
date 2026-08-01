@@ -10,11 +10,11 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.15"
   }
   public: {
     Tables: {
-      episode_comments: {
+      syntax_error_episode_comments: {
         Row: {
           author_display_name: string
           body: string
@@ -41,22 +41,22 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "episode_comments_episode_ref_fkey"
+            foreignKeyName: "syntax_error_episode_comments_episode_ref_fkey"
             columns: ["episode_ref"]
             isOneToOne: false
-            referencedRelation: "episodes"
+            referencedRelation: "syntax_error_episodes"
             referencedColumns: ["ref"]
           },
           {
-            foreignKeyName: "episode_comments_parent_id_fkey"
+            foreignKeyName: "syntax_error_episode_comments_parent_id_fkey"
             columns: ["parent_id"]
             isOneToOne: false
-            referencedRelation: "episode_comments"
+            referencedRelation: "syntax_error_episode_comments"
             referencedColumns: ["id"]
           },
         ]
       }
-      episode_ratings: {
+      syntax_error_episode_ratings: {
         Row: {
           client_id: string
           created_at: string
@@ -68,7 +68,7 @@ export type Database = {
         Insert: {
           client_id: string
           created_at?: string
-          id?: never
+          id?: number
           rating: number
           ref: number
           updated_at?: string
@@ -76,22 +76,22 @@ export type Database = {
         Update: {
           client_id?: string
           created_at?: string
-          id?: never
+          id?: number
           rating?: number
           ref?: number
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "episode_ratings_ref_fkey"
+            foreignKeyName: "syntax_error_episode_ratings_ref_fkey"
             columns: ["ref"]
             isOneToOne: false
-            referencedRelation: "episodes"
+            referencedRelation: "syntax_error_episodes"
             referencedColumns: ["ref"]
           },
         ]
       }
-      episodes: {
+      syntax_error_episodes: {
         Row: {
           air_date: string | null
           created_at: string
@@ -133,7 +133,7 @@ export type Database = {
         }
         Relationships: []
       }
-      playlist_tracks: {
+      syntax_error_playlist_tracks: {
         Row: {
           artist: string | null
           file_url: string | null
@@ -163,17 +163,17 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "playlist_tracks_ref_fkey"
+            foreignKeyName: "syntax_error_playlist_tracks_ref_fkey"
             columns: ["ref"]
             isOneToOne: false
-            referencedRelation: "episodes"
+            referencedRelation: "syntax_error_episodes"
             referencedColumns: ["ref"]
           },
         ]
       }
     }
     Views: {
-      episode_rating_stats: {
+      syntax_error_episode_rating_stats: {
         Row: {
           avg_rating: number | null
           rating_count: number | null
@@ -181,11 +181,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'episode_ratings_ref_fkey'
-            columns: ['ref']
+            foreignKeyName: "syntax_error_episode_ratings_ref_fkey"
+            columns: ["ref"]
             isOneToOne: false
-            referencedRelation: 'episodes'
-            referencedColumns: ['ref']
+            referencedRelation: "syntax_error_episodes"
+            referencedColumns: ["ref"]
           },
         ]
       }

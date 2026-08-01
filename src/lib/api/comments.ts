@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabaseClient'
+import { TABLES } from '@/lib/supabaseTables'
 
 export type Comment = {
   id: string
@@ -29,7 +30,7 @@ function buildTree(rows: RawComment[]): Comment[] {
 
 export async function fetchCommentsForEpisode(episodeRef: number): Promise<Comment[]> {
   const { data, error } = await supabase
-    .from('episode_comments')
+    .from(TABLES.episodeComments)
     .select('id, episode_ref, parent_id, author_display_name, body, created_at')
     .eq('episode_ref', episodeRef)
     .order('created_at', { ascending: true })
@@ -45,7 +46,7 @@ export async function createComment(params: {
   body: string
 }): Promise<Comment> {
   const { data, error } = await supabase
-    .from('episode_comments')
+    .from(TABLES.episodeComments)
     .insert({
       episode_ref: params.episodeRef,
       parent_id: params.parentId ?? undefined,

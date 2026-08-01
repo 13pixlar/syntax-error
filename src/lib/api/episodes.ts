@@ -1,12 +1,13 @@
 import { supabase } from '@/lib/supabaseClient'
+import { TABLES } from '@/lib/supabaseTables'
 import type { Tables } from '@/lib/database.types'
 
-export type Episode = Tables<'episodes'>
-export type PlaylistTrack = Tables<'playlist_tracks'>
+export type Episode = Tables<'syntax_error_episodes'>
+export type PlaylistTrack = Tables<'syntax_error_playlist_tracks'>
 
 export async function fetchEpisodes(): Promise<Episode[]> {
   const { data, error } = await supabase
-    .from('episodes')
+    .from(TABLES.episodes)
     .select('*')
     .order('ref', { ascending: true })
 
@@ -16,7 +17,7 @@ export async function fetchEpisodes(): Promise<Episode[]> {
 
 export async function fetchEpisodeByRef(ref: number): Promise<Episode | null> {
   const { data, error } = await supabase
-    .from('episodes')
+    .from(TABLES.episodes)
     .select('*')
     .eq('ref', ref)
     .maybeSingle()
@@ -29,7 +30,7 @@ export async function fetchEpisodeByRef(ref: number): Promise<Episode | null> {
 export async function fetchEpisodesByRefs(refs: number[]): Promise<Episode[]> {
   if (refs.length === 0) return []
   const { data, error } = await supabase
-    .from('episodes')
+    .from(TABLES.episodes)
     .select('*')
     .in('ref', refs)
 
@@ -48,7 +49,7 @@ export async function fetchPlaylistForRef(
   ref: number,
 ): Promise<PlaylistTrack[]> {
   const { data, error } = await supabase
-    .from('playlist_tracks')
+    .from(TABLES.playlistTracks)
     .select('*')
     .eq('ref', ref)
     .order('sort_order', { ascending: true })
@@ -59,7 +60,7 @@ export async function fetchPlaylistForRef(
 
 export async function fetchAllPlaylistTracks(): Promise<PlaylistTrack[]> {
   const { data, error } = await supabase
-    .from('playlist_tracks')
+    .from(TABLES.playlistTracks)
     .select('*')
     .order('ref', { ascending: true })
     .order('sort_order', { ascending: true })
@@ -73,7 +74,7 @@ export async function fetchEpisodesByFeaturedGame(
   gameName: string,
 ): Promise<Episode[]> {
   const { data, error } = await supabase
-    .from('episodes')
+    .from(TABLES.episodes)
     .select('*')
     .contains('featured_games', [gameName])
     .order('ref', { ascending: true })
