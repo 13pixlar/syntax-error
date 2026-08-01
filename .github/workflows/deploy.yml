@@ -1,0 +1,48 @@
+name: Deploy to syntaxerror.13pixlar.se
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-syntaxerror
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H 13pixlar.se >> ~/.ssh/known_hosts
+
+      - name: Sync source to server
+        run: |
+          rsync -az --delete \
+            --exclude .git --exclude node_modules --exclude dist \
+            --exclude data --exclude audio \
+            --exclude .env --exclude .env.local \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            ./ adam@13pixlar.se:/var/www/syntaxerror/
+
+      - name: Build on server
+        run: |
+          ssh -i ~/.ssh/deploy_key adam@13pixlar.se '
+            set -e
+            export PATH=/home/adam/.nvm/versions/node/v22.15.0/bin:$PATH
+            cd /var/www/syntaxerror
+            npm ci --no-audit --no-fund
+            npm run build
+          '
+
+      - name: Verify
+        run: |
+          sleep 5
+          curl -sf -o /dev/null https://syntaxerror.13pixlar.se/
+          echo "Deploy verified"
